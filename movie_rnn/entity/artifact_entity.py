@@ -1,0 +1,82 @@
+# ═══════════════════════════════════════════════════════════════════
+# movie_rnn/entity/artifact_entity.py
+# ═══════════════════════════════════════════════════════════════════
+# Har pipeline component ka OUTPUT (artifact) yahan define hota hai
+#
+# WHY ARTIFACT ENTITY?
+# Car Price + Network Security mein same pattern:
+#   Component kaam karta hai → typed object return karta hai
+#   Next component usi object ko input leta hai
+#   No bare tuples — typed dataclasses only
+#
+# PATTERN:
+# DataIngestion.initiate() → DataIngestionArtifact return karta hai
+#                                      ↓
+#                            DataValidation config isko leta hai
+#
+# ABHI SIRF:
+#   - DataIngestionArtifact
+# Baaki artifacts baad mein add honge jab unka component banega
+# ═══════════════════════════════════════════════════════════════════
+
+from dataclasses import dataclass
+
+
+# ══════════════════════════════════════════════════════════════════
+# DataIngestionArtifact
+# ══════════════════════════════════════════════════════════════════
+# DataIngestion component yeh object return karta hai
+# Iske andar saare output file paths hain
+
+@dataclass
+class DataIngestionArtifact:
+    x_train_path: str
+    # → "Artifacts/timestamp/data_ingestion/raw_data/X_train.npy"
+    # padded nahi — raw integer sequences
+
+    x_test_path: str
+    # → "Artifacts/timestamp/data_ingestion/raw_data/X_test.npy"
+
+    y_train_path: str
+    # → "Artifacts/timestamp/data_ingestion/raw_data/y_train.npy"
+    # 0 or 1 — Negative / Positive
+
+    y_test_path: str
+    # → "Artifacts/timestamp/data_ingestion/raw_data/y_test.npy"
+
+    word_index_path: str
+    # → "Artifacts/timestamp/data_ingestion/raw_data/word_index.pkl"
+    # IMP: yeh path ModelTrainer tak travel karega
+    #      wahan se HuggingFace pe push hoga
+
+
+# ─────────────────────────────────────────────────────────────────
+# DRY RUN
+#
+# artifact = DataIngestioavnArtifact(
+#     x_train_path   = "Artifacts/.../raw_data/X_train.npy",
+#     x_test_path    = "Artifacts/.../raw_data/X_test.npy",
+#     y_train_path   = "Artifacts/.../raw_data/y_train.npy",
+#     y_test_path    = "Artifacts/.../raw_data/y_test.npy",
+#     word_index_path = "Artifacts/.../raw_data/word_index.pkl",
+# )
+#
+# next component lega:
+# DataValidationConfig(training_pipeline_config, data_ingestion_artifact)
+# → artifact.x_train_path se data padhega
+# ─────────────────────────────────────────────────────────────────
+
+
+# ─────────────────────────────────────────────────────────────────
+# COMPARISON — Car Price vs Movie Sentiment
+#
+# ┌──────────────────┬─────────────────────┬──────────────────────┐
+# │ Field            │ Car Price           │ Movie Sentiment       │
+# ├──────────────────┼─────────────────────┼──────────────────────┤
+# │ train data       │ train.csv (path)    │ X_train.npy (path)   │
+# │ test data        │ test.csv (path)     │ X_test.npy (path)    │
+# │ labels           │ inside csv          │ y_train/y_test .npy  │
+# │ extra file       │ —                   │ word_index.pkl       │
+# │ format           │ .csv tabular        │ .npy sequences       │
+# └──────────────────┴─────────────────────┴──────────────────────┘
+# ─────────────────────────────────────────────────────────────────
