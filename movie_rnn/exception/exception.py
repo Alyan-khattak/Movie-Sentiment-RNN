@@ -24,7 +24,7 @@ def error_message_detail(error, error_detail: sys):
     return error_message
 
 
-class CarPriceException(Exception):
+class MovieSentimentException(Exception):
     def __init__(self, error_message, error_detail: sys):
         super().__init__(error_message)   # init base Exception with message
         # override message with detailed version (file + line + error)
@@ -68,4 +68,4 @@ if __name__ == "__main__":
         a = 1
         b = a + d
     except Exception as e:
-        raise CarPriceException(e, sys)
+        raise MovieSentimentException(e, sys)
