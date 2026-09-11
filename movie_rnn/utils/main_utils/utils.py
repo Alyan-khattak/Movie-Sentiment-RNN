@@ -19,8 +19,8 @@ import sys
 import dill
 import numpy as np
 
-from movie_rnn.exception import MovieSentimentException
-from movie_rnn.logging import logger
+from movie_rnn.exception.exception import MovieSentimentException
+from movie_rnn.logging.logger import logging
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -57,7 +57,7 @@ def save_numpy_array(file_path: str, array: np.ndarray) -> None:
         #      isliye constants mein "X_train.npy" rakha hai
         #      taaki confusion na ho
 
-        logger.info(f"Numpy array saved at: {file_path} | shape: {array.shape}")
+        logging.info(f"Numpy array saved at: {file_path} | shape: {array.shape}")
 
     except Exception as e:
         raise MovieSentimentException(e, sys)
@@ -99,7 +99,7 @@ def save_object(file_path: str, obj: object) -> None:
             # IMP: dill.dump(obj, file_obj) — argument order
 
 
-        logger.info(f"Object saved at: {file_path}")
+        logging.info(f"Object saved at: {file_path}")
 
     except Exception as e:
         raise MovieSentimentException(e, sys)

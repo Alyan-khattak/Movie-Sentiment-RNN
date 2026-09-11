@@ -34,8 +34,8 @@ from tensorflow.keras.datasets import imdb
 from movie_rnn.entity.config_entity import DataIngestionConfig
 from movie_rnn.entity.artifact_entity import DataIngestionArtifact
 from movie_rnn.utils.main_utils.utils import save_numpy_array, save_object
-from movie_rnn.exception import MovieSentimentException
-from movie_rnn.logging import logger
+from movie_rnn.exception.exception import MovieSentimentException
+from movie_rnn.logging.logger import logging
 
 
 class DataIngestion:
@@ -52,7 +52,7 @@ class DataIngestion:
         """
         try:
             self.data_ingestion_config = data_ingestion_config
-            logger.info("DataIngestion initialized")
+            logging.info("DataIngestion initialized")
         except Exception as e:
             raise MovieSentimentException(e, sys)
 
@@ -81,7 +81,7 @@ class DataIngestion:
              baaki sab → index 2 (unknown token) se replace honge
         """
         try:
-            logger.info("Loading IMDB dataset from keras...")
+            logging.info("Loading IMDB dataset from keras...")
 
             # ── LOAD DATASET ──────────────────────────────────────
             (X_train, y_train), (X_test, y_test) = imdb.load_data(
@@ -100,7 +100,7 @@ class DataIngestion:
             # IMP: X_train dtype = object (variable length sequences)
             #      y_train dtype = int64
 
-            logger.info(
+            logging.info(
                 f"Dataset loaded | "
                 f"X_train: {X_train.shape} | "
                 f"X_test: {X_test.shape}"
@@ -113,7 +113,7 @@ class DataIngestion:
             #      lekin humne sirf 10000 load kiye hain
             #      isliye prediction pe bhi sirf top 10k kaam karenge
 
-            logger.info(f"Word index loaded | vocab size: {len(word_index)}")
+            logging.info(f"Word index loaded | vocab size: {len(word_index)}")
 
             return X_train, y_train, X_test, y_test, word_index
 
@@ -142,7 +142,7 @@ class DataIngestion:
         └── word_index.pkl    ← {"the": 1, "movie": 45, ...}
         """
         try:
-            logger.info("Saving ingested data to disk...")
+            logging.info("Saving ingested data to disk...")
 
             cfg = self.data_ingestion_config
 
@@ -165,7 +165,7 @@ class DataIngestion:
             # IMP: word_index dict → dill se serialize
             #      prediction time pe text → integers ke liye zaroori
 
-            logger.info("All data saved successfully")
+            logging.info("All data saved successfully")
 
             # ── BUILD ARTIFACT ────────────────────────────────────
             artifact = DataIngestionArtifact(
@@ -178,7 +178,7 @@ class DataIngestion:
             # IMP: artifact mein sirf paths hain — data nahi
             #      next component artifact se path lega → khud load karega
 
-            logger.info(f"DataIngestionArtifact created: {artifact}")
+            logging.info(f"DataIngestionArtifact created: {artifact}")
             return artifact
 
         except Exception as e:
@@ -199,7 +199,7 @@ class DataIngestion:
         DataIngestionArtifact
         """
         try:
-            logger.info(">>> DataIngestion started <<<")
+            logging.info(">>> DataIngestion started <<<")
 
             # ── STEP 1: download ──────────────────────────────────
             X_train, y_train, X_test, y_test, word_index = self.download_data()
@@ -211,7 +211,7 @@ class DataIngestion:
                 word_index
             )
 
-            logger.info(">>> DataIngestion completed <<<")
+            logging.info(">>> DataIngestion completed <<<")
             return artifact
 
         except Exception as e:
