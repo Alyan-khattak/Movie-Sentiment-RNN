@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual env
+venv/
+env/
+.env
+.venv/
+
+# Artifacts & model files (never commit these)
+Artifacts/
+final_model/
+*.h5
+*.keras
+*.pkl
+*.npy
+
+# Logs
+logs/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Data (downloaded by keras automatically)
+~/.keras/
