@@ -83,3 +83,25 @@ IMDB_Y_TEST_FILE:  str = "y_test.npy"
 # .npy format → numpy ka native format → fast load/save
 # IMP: Car Price mein .csv tha kyunki tabular data tha
 #      Yahan sequences hain → .npy zyada suitable hai
+
+
+
+
+# ─────────────────────────────────────────────────────────────────
+# DATA VALIDATION CONSTANTS
+# prefix: DATA_VALIDATION_
+# ─────────────────────────────────────────────────────────────────
+
+DATA_VALIDATION_DIR_NAME: str = "data_validation"
+# path: Artifacts/timestamp/data_validation/
+
+DATA_VALIDATION_REPORT_FILE_NAME: str = "validation_report.yaml"
+# validation results yahan save honge
+# path: Artifacts/timestamp/data_validation/validation_report.yaml
+
+# expected shapes — agar match nahi kiya → pipeline rok do
+DATA_VALIDATION_EXPECTED_TRAIN_SAMPLES: int = 25000
+DATA_VALIDATION_EXPECTED_TEST_SAMPLES:  int = 25000
+DATA_VALIDATION_EXPECTED_MAX_INDEX:     int = 10000
+# IMP: har sequence mein koi bhi index 10000 se zyada nahi hona chahiye
+#      kyunki max_features = 10000 set kiya tha load_data mein
