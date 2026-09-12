@@ -50,6 +50,25 @@ class DataIngestionArtifact:
     #      wahan se HuggingFace pe push hoga
 
 
+
+
+# ══════════════════════════════════════════════════════════════════
+# DataValidationArtifact
+# ═════════
+
+@dataclass
+class DataValidationArtifact:
+    validation_status: bool
+    # True  → sab checks pass → pipeline continue karo
+    # False → kuch fail → pipeline rok do
+
+    validation_report_path: str
+    # → "Artifacts/timestamp/data_validation/validation_report.yaml"
+
+    message: str
+    # pass hone pe → "All validation checks passed"
+    # fail hone pe → exactly kya fail hua
+
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN
 #

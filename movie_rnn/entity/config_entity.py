@@ -141,6 +141,40 @@ class DataIngestionConfig:
         # → 10000 — top 10k words only
 
 
+
+
+
+class DataValidationConfig:
+    def __init__(self, training_pipeline_config: TrainingPipelineConfig):
+        """
+        PATH STRUCTURE:
+        Artifacts/
+        └── timestamp/
+            └── data_validation/
+                └── validation_report.yaml
+        """
+
+        self.data_validation_dir: str = os.path.join(
+            training_pipeline_config.artifact_dir,
+            training_pipeline.DATA_VALIDATION_DIR_NAME
+        )
+        # → "Artifacts/timestamp/data_validation"
+
+        self.validation_report_path: str = os.path.join(
+            self.data_validation_dir,
+            training_pipeline.DATA_VALIDATION_REPORT_FILE_NAME
+        )
+        # → "Artifacts/timestamp/data_validation/validation_report.yaml"
+
+        self.expected_train_samples: int = training_pipeline.DATA_VALIDATION_EXPECTED_TRAIN_SAMPLES
+        # → 25000
+
+        self.expected_test_samples: int = training_pipeline.DATA_VALIDATION_EXPECTED_TEST_SAMPLES
+        # → 25000
+
+        self.expected_max_index: int = training_pipeline.DATA_VALIDATION_EXPECTED_MAX_INDEX
+        # → 10000
+  
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN
 #
