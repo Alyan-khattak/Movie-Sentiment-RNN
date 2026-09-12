@@ -215,7 +215,41 @@ class DataTransformationConfig:
         # → ".../transformed/X_test_padded.npy"
 
         self.max_len: int = training_pipeline.IMDB_MAX_LEN
-        # → 500
+        # → 
+        
+
+
+class ModelTrainerConfig:
+    def __init__(self, training_pipeline_config: TrainingPipelineConfig):
+        """
+        PATH STRUCTURE:
+        Artifacts/
+        └── timestamp/
+            └── model_trainer/
+                └── trained_model/
+                    └── model.keras
+        """
+
+        self.model_trainer_dir: str = os.path.join(
+            training_pipeline_config.artifact_dir,
+            training_pipeline.MODEL_TRAINER_DIR_NAME
+        )
+        # → "Artifacts/timestamp/model_trainer"
+
+        self.trained_model_path: str = os.path.join(
+            self.model_trainer_dir,
+            training_pipeline.MODEL_TRAINER_TRAINED_MODEL_DIR,
+            training_pipeline.MODEL_TRAINER_MODEL_FILE_NAME
+        )
+        # → "Artifacts/timestamp/model_trainer/trained_model/model.keras"
+
+        self.embedding_dim: int   = training_pipeline.MODEL_TRAINER_EMBEDDING_DIM
+        self.rnn_units: int       = training_pipeline.MODEL_TRAINER_RNN_UNITS
+        self.epochs: int          = training_pipeline.MODEL_TRAINER_EPOCHS
+        self.batch_size: int      = training_pipeline.MODEL_TRAINER_BATCH_SIZE
+        self.validation_split: float = training_pipeline.MODEL_TRAINER_VALIDATION_SPLIT
+        self.patience: int        = training_pipeline.MODEL_TRAINER_EARLY_STOPPING_PATIENCE
+        self.expected_accuracy: float = training_pipeline.MODEL_TRAINER_EXPECTED_ACCURACY
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN
 #

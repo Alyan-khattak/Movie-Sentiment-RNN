@@ -85,7 +85,24 @@ class DataTransformationArtifact:
     # shape: (25000, 500)
 
 
-    
+
+
+# ══════════════════════════════════════════════════════════════════
+# Model Trainer 
+# ═════════
+@dataclass
+class ModelTrainerArtifact:
+    trained_model_path: str
+    # → "Artifacts/.../model_trainer/trained_model/model.keras"
+
+    train_accuracy: float
+    test_accuracy: float
+    # IMP: test_accuracy >= 0.80 → accepted
+    #      test_accuracy <  0.80 → pipeline fail
+
+    is_model_accepted: bool
+    # True  → HuggingFace push hoga
+    # False → pipeline rukegi
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN
 #
