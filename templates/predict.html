@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyze Review — CineRead</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold:       #C8A96E;
+      --gold-dim:   #8B7145;
+      --gold-glow:  rgba(200,169,110,0.15);
+      --bg:         #080808;
+      --bg-card:    #0f0f0f;
+      --surface:    rgba(255,255,255,0.04);
+      --border:     rgba(255,255,255,0.07);
+      --border-gold:rgba(200,169,110,0.3);
+      --text:       #F0EBE1;
+      --text-dim:   rgba(240,235,225,0.5);
+      --text-muted: rgba(240,235,225,0.3);
+      --spring:     cubic-bezier(0.32,0.72,0,1);
+      --ease-out:   cubic-bezier(0.16,1,0.3,1);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+    }
+
+    /* AMBIENT */
+    .ambient {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(100px);
+    }
+    .ambient-1 {
+      width: 500px; height: 500px;
+      top: -100px; right: -100px;
+      background: radial-gradient(circle, rgba(200,169,110,0.07) 0%, transparent 70%);
+    }
+    .ambient-2 {
+      width: 400px; height: 400px;
+      bottom: -100px; left: -100px;
+      background: radial-gradient(circle, rgba(100,60,180,0.06) 0%, transparent 70%);
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(8,8,8,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.3s var(--ease-out);
+    }
+    .nav-back:hover { color: var(--gold); }
+
+    /* MAIN LAYOUT */
+    .main {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem 4rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* HEADER */
+    .page-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      background: rgba(200,169,110,0.08);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+    }
+    .page-title em { font-style: italic; color: var(--gold); }
+
+    .page-sub {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+    }
+
+    /* FORM CARD — double bezel */
+    .form-shell {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 1.75rem;
+      padding: 0.3rem;
+      opacity: 0;
+      animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
+      transition: border-color 0.4s var(--ease-out);
+    }
+    .form-shell:focus-within {
+      border-color: var(--border-gold);
+      box-shadow: 0 0 60px rgba(200,169,110,0.06);
+    }
+
+    .form-core {
+      background: var(--bg-card);
+      border-radius: calc(1.75rem - 0.3rem);
+      padding: 2rem;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.04);
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .form-label-text {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .char-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .char-count.active { color: var(--gold); }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      font-weight: 300;
+      resize: vertical;
+      caret-color: var(--gold);
+    }
+    textarea::placeholder { color: var(--text-muted); font-style: italic; }
+
+    /* DIVIDER */
+    .form-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* FORM FOOTER */
+    .form-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .model-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .model-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .model-info-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* SUBMIT BUTTON */
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.8rem;
+      background: var(--gold);
+      color: #080808;
+      border: none;
+      border-radius: 9999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: all 0.4s var(--spring);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    }
+    .btn-submit:hover { transform: scale(1.04); background: #d4b47a; box-shadow: 0 0 40px rgba(200,169,110,0.35); }
+    .btn-submit:active { transform: scale(0.97); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-icon-circle {
+      width: 1.5rem; height: 1.5rem;
+      background: rgba(0,0,0,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      transition: transform 0.3s var(--spring);
+    }
+    .btn-submit:hover .btn-icon-circle { transform: translate(2px,-1px) scale(1.1); }
+
+    /* LOADING STATE */
+    .loading-ring {
+      width: 1rem; height: 1rem;
+      border: 2px solid rgba(8,8,8,0.3);
+      border-top-color: #080808;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .btn-submit.loading .loading-ring { display: block; }
+    .btn-submit.loading .btn-icon-circle { display: none; }
+    .btn-submit.loading .btn-text::after { content: '...'; }
+
+    /* EXAMPLES */
+    .examples {
+      margin-top: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.55s forwards;
+    }
+    .examples-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .example-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .example-pill {
+      padding: 0.4rem 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+      font-style: italic;
+    }
+    .example-pill:hover {
+      border-color: var(--border-gold);
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      nav { gap: 1rem; padding: 0.65rem 1rem; }
+      .form-footer { flex-direction: column; align-items: stretch; }
+      .btn-submit { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+
+  <nav>
+    <a href="/" class="nav-logo">CineRead</a>
+    <a href="/" class="nav-back">← Back</a>
+  </nav>
+
+  <main class="main">
+    <div class="container">
+
+      <div class="page-eyebrow">Sentiment Analysis</div>
+
+      <h1 class="page-title">
+        What does the<br/><em>audience feel?</em>
+      </h1>
+
+      <p class="page-sub">
+        Paste any movie review below. The model will analyze the sentiment
+        and return a Positive or Negative prediction with a confidence score.
+      </p>
+
+      <!-- FORM -->
+      <form method="POST" action="/predict" id="sentimentForm">
+        <div class="form-shell">
+          <div class="form-core">
+
+            <div class="form-label">
+              <span class="form-label-text">Your Review</span>
+              <span class="char-count" id="charCount">0 words</span>
+            </div>
+
+            <textarea
+              name="review"
+              id="reviewInput"
+              placeholder="e.g. This film is an absolute masterpiece. The performances are breathtaking and the cinematography is stunning — one of the best I've seen all year..."
+              required
+            ></textarea>
+
+            <div class="form-divider"></div>
+
+            <div class="form-footer">
+              <div class="model-info">
+                <div class="model-dot"></div>
+                <span class="model-info-text">SimpleRNN · 10k vocab · 500 tokens</span>
+              </div>
+              <button type="submit" class="btn-submit" id="submitBtn">
+                <span class="btn-text">Analyze Sentiment</span>
+                <div class="loading-ring"></div>
+                <div class="btn-icon-circle">↗</div>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </form>
+
+      <!-- EXAMPLE REVIEWS -->
+      <div class="examples">
+        <div class="examples-label">Try an example</div>
+        <div class="example-pills">
+          <div class="example-pill" onclick="fillExample(this)">
+            An absolute masterpiece. The performances were breathtaking and the story moved me deeply.
+          </div>
+          <div class="example-pill" onclick="fillExample(this)">
+            Terrible waste of two hours. The plot made no sense and the acting was wooden throughout.
+          </div>
+          <div class="example-pill" onclick="fillExample(this)">
+            A bold and visually stunning film that pushes boundaries in ways few directors dare.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const textarea = document.getElementById('reviewInput');
+    const charCount = document.getElementById('charCount');
+    const form = document.getElementById('sentimentForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Word count
+    textarea.addEventListener('input', () => {
+      const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
+      const count = textarea.value.trim() === '' ? 0 : words.length;
+      charCount.textContent = `${count} word${count !== 1 ? 's' : ''}`;
+      charCount.classList.toggle('active', count > 0);
+    });
+
+    // Submit loading state
+    form.addEventListener('submit', () => {
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+    });
+
+    // Fill example
+    function fillExample(el) {
+      textarea.value = el.textContent.trim();
+      textarea.dispatchEvent(new Event('input'));
+      textarea.focus();
+    }
+  </script>
+</body>
+</html>

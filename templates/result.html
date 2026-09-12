@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Result — CineRead</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold:         #C8A96E;
+      --gold-glow:    rgba(200,169,110,0.15);
+      --border-gold:  rgba(200,169,110,0.3);
+      --positive:     #4ADE80;
+      --positive-glow:rgba(74,222,128,0.15);
+      --positive-border:rgba(74,222,128,0.3);
+      --negative:     #F87171;
+      --negative-glow:rgba(248,113,113,0.15);
+      --negative-border:rgba(248,113,113,0.3);
+      --bg:           #080808;
+      --bg-card:      #0f0f0f;
+      --border:       rgba(255,255,255,0.07);
+      --text:         #F0EBE1;
+      --text-dim:     rgba(240,235,225,0.5);
+      --text-muted:   rgba(240,235,225,0.3);
+      --spring:       cubic-bezier(0.32,0.72,0,1);
+      --ease-out:     cubic-bezier(0.16,1,0.3,1);
+      /* set dynamically by JS */
+      --accent:       var(--gold);
+      --accent-glow:  var(--gold-glow);
+      --accent-border:var(--border-gold);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+    }
+
+    /* AMBIENT — changes color based on sentiment */
+    .ambient {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(120px);
+      transition: background 1s var(--ease-out);
+    }
+    .ambient-main {
+      width: 700px; height: 700px;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+    }
+    body.positive .ambient-main {
+      background: radial-gradient(circle, rgba(74,222,128,0.07) 0%, transparent 70%);
+    }
+    body.negative .ambient-main {
+      background: radial-gradient(circle, rgba(248,113,113,0.07) 0%, transparent 70%);
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--gold); }
+
+    /* MAIN */
+    .main {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem 4rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* VERDICT CARD — double bezel */
+    .verdict-shell {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: 0.3rem;
+      opacity: 0;
+      animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+    }
+    body.positive .verdict-shell {
+      border-color: var(--positive-border);
+      box-shadow: 0 0 80px var(--positive-glow);
+    }
+    body.negative .verdict-shell {
+      border-color: var(--negative-border);
+      box-shadow: 0 0 80px var(--negative-glow);
+    }
+
+    .verdict-core {
+      background: var(--bg-card);
+      border-radius: calc(2rem - 0.3rem);
+      padding: 3rem;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.04);
+      text-align: center;
+    }
+
+    /* SENTIMENT ICON */
+    .sentiment-icon {
+      width: 5rem; height: 5rem;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 2rem;
+      border: 1px solid;
+      animation: iconPop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;
+    }
+    body.positive .sentiment-icon {
+      background: var(--positive-glow);
+      border-color: var(--positive-border);
+    }
+    body.negative .sentiment-icon {
+      background: var(--negative-glow);
+      border-color: var(--negative-border);
+    }
+
+    /* VERDICT LABEL */
+    .verdict-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .verdict-label {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.6s forwards;
+    }
+    body.positive .verdict-label { color: var(--positive); }
+    body.negative .verdict-label { color: var(--negative); }
+
+    /* CONFIDENCE */
+    .confidence-section {
+      margin: 2rem 0;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.75s forwards;
+    }
+
+    .confidence-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .confidence-bar-shell {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .confidence-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.16,1,0.3,1) 0.9s;
+    }
+    body.positive .confidence-bar-fill { background: var(--positive); }
+    body.negative .confidence-bar-fill { background: var(--negative); }
+
+    .confidence-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    body.positive .confidence-num { color: var(--positive); }
+    body.negative .confidence-num { color: var(--negative); }
+
+    .confidence-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* RAW SCORE */
+    .raw-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: var(--surface, rgba(255,255,255,0.04));
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+
+    /* DIVIDER */
+    .verdict-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 2rem 0;
+    }
+
+    /* REVIEW EXCERPT */
+    .review-section {
+      text-align: left;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+    }
+    .review-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .review-text {
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+      font-style: italic;
+      max-height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+    .review-text::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, var(--bg-card));
+    }
+
+    /* ACTIONS */
+    .actions {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
+    }
+
+    .btn-primary {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.9rem 1.5rem;
+      background: var(--gold);
+      color: #080808;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.4s var(--spring);
+      min-width: 180px;
+    }
+    .btn-primary:hover { transform: scale(1.03); background: #d4b47a; box-shadow: 0 0 40px rgba(200,169,110,0.3); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-ghost {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 400;
+      text-decoration: none;
+      transition: all 0.4s var(--spring);
+      min-width: 140px;
+    }
+    .btn-ghost:hover { border-color: var(--border-gold); color: var(--gold); }
+
+    /* MODEL FOOTER */
+    .model-footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      opacity: 0;
+      animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 1.2s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes iconPop {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      .verdict-core { padding: 2rem 1.5rem; }
+      .actions { flex-direction: column; }
+      .btn-primary, .btn-ghost { min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient ambient-main"></div>
+
+  <nav>
+    <a href="/" class="nav-logo">CineRead</a>
+    <a href="/predict" class="nav-back">← Analyze another</a>
+  </nav>
+
+  <main class="main">
+    <div class="container">
+
+      <!-- VERDICT CARD -->
+      <div class="verdict-shell">
+        <div class="verdict-core">
+
+          <!-- ICON -->
+          <div class="sentiment-icon" id="sentimentIcon">
+            {{ '🎬' if label == 'Positive' else '🎭' }}
+          </div>
+
+          <!-- LABEL -->
+          <div class="verdict-eyebrow">Sentiment Analysis Result</div>
+          <div class="verdict-label">{{ label }}</div>
+
+          <!-- CONFIDENCE BAR -->
+          <div class="confidence-section">
+            <div class="confidence-label">Model Confidence</div>
+            <div class="confidence-bar-shell">
+              <div class="confidence-bar-fill" id="confBar"></div>
+            </div>
+            <div class="confidence-num">{{ confidence }}%</div>
+            <div class="confidence-sub">confidence in this prediction</div>
+            <div class="raw-score">
+              Raw score: {{ "%.4f"|format(score) }}
+            </div>
+          </div>
+
+          <div class="verdict-divider"></div>
+
+          <!-- REVIEW EXCERPT -->
+          <div class="review-section">
+            <div class="review-label">Your Review</div>
+            <div class="review-text">"{{ review }}"</div>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="actions">
+            <a href="/predict" class="btn-primary">
+              ↩ Analyze Another
+            </a>
+            <a href="/" class="btn-ghost">
+              Home
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MODEL INFO -->
+      <div class="model-footer">
+        SimpleRNN · Embedding(10k, 128) · 500 tokens · sigmoid output
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Set sentiment class on body
+    const label = "{{ label }}";
+    const confidence = {{ confidence }};
+
+    document.body.classList.add(label.toLowerCase());
+
+    // Animate confidence bar
+    setTimeout(() => {
+      document.getElementById('confBar').style.width = confidence + '%';
+    }, 100);
+  </script>
+</body>
+</html>

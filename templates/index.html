@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineRead — Movie Sentiment AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold:       #C8A96E;
+      --gold-dim:   #8B7145;
+      --gold-glow:  rgba(200,169,110,0.18);
+      --bg:         #080808;
+      --bg-card:    #0f0f0f;
+      --bg-card2:   #141414;
+      --surface:    rgba(255,255,255,0.04);
+      --border:     rgba(255,255,255,0.07);
+      --border-gold:rgba(200,169,110,0.25);
+      --text:       #F0EBE1;
+      --text-dim:   rgba(240,235,225,0.5);
+      --text-muted: rgba(240,235,225,0.3);
+      --spring:     cubic-bezier(0.32,0.72,0,1);
+      --ease-out:   cubic-bezier(0.16,1,0.3,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRAIN OVERLAY ───────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+    }
+
+    /* ── AMBIENT GLOW ─────────────────────────────────────────── */
+    .ambient {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(120px);
+    }
+    .ambient-1 {
+      width: 600px; height: 600px;
+      top: -200px; left: -100px;
+      background: radial-gradient(circle, rgba(200,169,110,0.08) 0%, transparent 70%);
+    }
+    .ambient-2 {
+      width: 400px; height: 400px;
+      bottom: 10%; right: -100px;
+      background: radial-gradient(circle, rgba(100,60,180,0.07) 0%, transparent 70%);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(8,8,8,0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+      transition: all 0.5s var(--spring);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color 0.3s var(--ease-out);
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      background: var(--gold);
+      color: #080808 !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: 9999px;
+      font-weight: 500 !important;
+      font-size: 0.75rem !important;
+      transition: all 0.4s var(--spring) !important;
+    }
+    .nav-cta:hover { background: #d4b47a !important; transform: scale(1.03); }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 6rem;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      background: rgba(200,169,110,0.08);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s var(--ease-out) 0.2s forwards;
+    }
+    .eyebrow-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .hero-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 9vw, 7.5rem);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      max-width: 900px;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 1s var(--ease-out) 0.35s forwards;
+    }
+    .hero-headline em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      max-width: 500px;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+      margin-bottom: 3rem;
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp 0.9s var(--ease-out) 0.5s forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s var(--ease-out) 0.65s forwards;
+    }
+
+    /* ── BUTTONS ──────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.8rem;
+      background: var(--gold);
+      color: #080808;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: all 0.4s var(--spring);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      border-radius: inherit;
+    }
+    .btn-primary:hover { transform: scale(1.04); background: #d4b47a; box-shadow: 0 0 40px rgba(200,169,110,0.4); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-icon {
+      width: 1.6rem; height: 1.6rem;
+      background: rgba(0,0,0,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      transition: transform 0.3s var(--spring);
+    }
+    .btn-primary:hover .btn-icon { transform: translate(2px,-1px) scale(1.1); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 400;
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: all 0.4s var(--spring);
+    }
+    .btn-ghost:hover { border-color: var(--border-gold); color: var(--gold); transform: scale(1.02); }
+
+    /* ── SCROLL INDICATOR ─────────────────────────────────────── */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 1s var(--ease-out) 1.2s forwards;
+    }
+    .scroll-line {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, var(--gold-dim), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+
+    /* ── STATS STRIP ──────────────────────────────────────────── */
+    .stats-strip {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── FEATURE SECTION ──────────────────────────────────────── */
+    .section {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 8rem 2rem;
+    }
+
+    .section-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .section-sub {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+      max-width: 500px;
+      margin-bottom: 4rem;
+    }
+
+    /* ── BENTO GRID ───────────────────────────────────────────── */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto;
+      gap: 1rem;
+    }
+
+    /* OUTER SHELL (double-bezel) */
+    .card-shell {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      padding: 0.25rem;
+      transition: border-color 0.4s var(--ease-out), transform 0.5s var(--spring);
+    }
+    .card-shell:hover { border-color: var(--border-gold); transform: translateY(-3px); }
+
+    /* INNER CORE */
+    .card-core {
+      background: var(--bg-card);
+      border-radius: calc(1.5rem - 0.25rem);
+      padding: 2rem;
+      height: 100%;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-a { grid-column: span 7; }
+    .card-b { grid-column: span 5; }
+    .card-c { grid-column: span 4; }
+    .card-d { grid-column: span 8; }
+
+    .card-icon {
+      width: 2.5rem; height: 2.5rem;
+      background: var(--gold-glow);
+      border: 1px solid var(--border-gold);
+      border-radius: 0.75rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-desc {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    /* ACCENT CARD */
+    .card-accent .card-core {
+      background: linear-gradient(135deg, rgba(200,169,110,0.1) 0%, rgba(200,169,110,0.03) 100%);
+    }
+
+    /* MODEL CARD special */
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.75rem;
+      background: rgba(200,169,110,0.08);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    .accuracy-display {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
+    .accuracy-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .accuracy-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding-bottom: 0.5rem;
+    }
+
+    /* PIPELINE CARD */
+    .pipeline-steps {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .step-num {
+      width: 1.5rem; height: 1.5rem;
+      background: var(--gold-glow);
+      border: 1px solid var(--border-gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .step-text {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── CTA SECTION ──────────────────────────────────────────── */
+    .cta-section {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 8rem 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 2px;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .footer-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── SCROLL REVEAL ────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px) blur(4px);
+      transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out), filter 0.9s var(--ease-out);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0) blur(0px);
+    }
+
+    /* ── ANIMATIONS ───────────────────────────────────────────── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50% { opacity: 0.8; transform: scaleY(1.2); }
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 0.65rem 1.2rem; gap: 1rem; }
+      .nav-links { display: none; }
+      .card-a, .card-b, .card-c, .card-d { grid-column: span 12; }
+      .bento { grid-template-columns: 1fr; }
+      .stats-strip { gap: 2rem; }
+      footer { flex-direction: column; text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">CineRead</a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#model">Model</a>
+      <a href="/predict" class="nav-cta">Analyze Review</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      SimpleRNN · IMDB Dataset · 81% Test Accuracy
+    </div>
+
+    <h1 class="hero-headline">
+      Does the audience <em>love</em><br/>or leave the theatre?
+    </h1>
+
+    <p class="hero-sub">
+      Paste any movie review and our AI decodes the sentiment in seconds —
+      built on a Simple RNN trained on 50,000 IMDB reviews.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/predict" class="btn-primary">
+        Analyze a Review
+        <span class="btn-icon">↗</span>
+      </a>
+      <a href="#how" class="btn-ghost">
+        See how it works
+      </a>
+    </div>
+
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-strip reveal">
+    <div class="stat">
+      <div class="stat-num">50k</div>
+      <div class="stat-label">Training Reviews</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">81%</div>
+      <div class="stat-label">Test Accuracy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">500</div>
+      <div class="stat-label">Token Window</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">10k</div>
+      <div class="stat-label">Vocabulary Size</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section" id="how">
+    <div class="reveal">
+      <p class="section-eyebrow">The Architecture</p>
+      <h2 class="section-title">Built like a production<br/>ML system should be.</h2>
+      <p class="section-sub">
+        Not just a notebook experiment — a full MLOps pipeline with experiment tracking,
+        model registry, and one-click deployment.
+      </p>
+    </div>
+
+    <div class="bento">
+
+      <!-- Card A: Model Architecture -->
+      <div class="card-shell card-a card-accent reveal">
+        <div class="card-core">
+          <div class="model-badge">
+            <span>●</span> SimpleRNN Architecture
+          </div>
+          <div class="card-title">Embedding → RNN → Sentiment</div>
+          <p class="card-desc">
+            10,000-word vocabulary encoded into 128-dimensional vectors,
+            compressed through a 128-unit SimpleRNN layer, distilled to a
+            single sigmoid output.
+          </p>
+          <div class="accuracy-display">
+            <div class="accuracy-num">81%</div>
+            <div class="accuracy-label">Test Accuracy<br/>on 25k reviews</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card B: Real-time -->
+      <div class="card-shell card-b reveal" style="transition-delay:0.1s">
+        <div class="card-core">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Real-time Inference</div>
+          <p class="card-desc">
+            Review text is tokenized, padded to 500 tokens,
+            and scored in under 100ms via FastAPI.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card C: MLflow -->
+      <div class="card-shell card-c reveal" style="transition-delay:0.15s">
+        <div class="card-core">
+          <div class="card-icon">📊</div>
+          <div class="card-title">MLflow Tracked</div>
+          <p class="card-desc">
+            Every training run logged to DagsHub — accuracy, F1, loss curves.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card D: Pipeline -->
+      <div class="card-shell card-d reveal" style="transition-delay:0.2s">
+        <div class="card-core">
+          <div class="card-icon">🔁</div>
+          <div class="card-title">4-Stage Production Pipeline</div>
+          <p class="card-desc">Same architecture as industry MLOps — not just a notebook.</p>
+          <div class="pipeline-steps">
+            <div class="pipeline-step">
+              <div class="step-num">1</div>
+              <div class="step-text">DataIngestion → keras.datasets.imdb → .npy arrays</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">2</div>
+              <div class="step-text">DataValidation → shape + vocab + label checks</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">3</div>
+              <div class="step-text">DataTransformation → pad_sequences(maxlen=500)</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">4</div>
+              <div class="step-text">ModelTrainer → EarlyStopping → MLflow → HuggingFace</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section reveal">
+    <p class="section-eyebrow">Try it now</p>
+    <h2 class="section-title" style="margin-bottom:1rem;">
+      What does your<br/><em style="color:var(--gold);font-style:italic;">review</em> feel like?
+    </h2>
+    <p style="color:var(--text-dim);font-size:0.95rem;margin-bottom:3rem;max-width:400px;margin-left:auto;margin-right:auto;line-height:1.8;">
+      Paste any movie review below and the model will tell you whether the audience loved it or hated it.
+    </p>
+    <a href="/predict" class="btn-primary" style="font-size:0.95rem;padding:1rem 2.2rem;">
+      Analyze a Review
+      <span class="btn-icon">↗</span>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">CineRead</div>
+    <div class="footer-text">SimpleRNN · TensorFlow · FastAPI · MLflow · HuggingFace</div>
+    <div class="footer-text">Built with an end-to-end MLOps pipeline</div>
+  </footer>
+
+  <script>
+    // ── SCROLL REVEAL ──────────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── NAV SCROLL EFFECT ──────────────────────────────────────
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 80) {
+        nav.style.background = 'rgba(8,8,8,0.95)';
+      } else {
+        nav.style.background = 'rgba(8,8,8,0.7)';
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
