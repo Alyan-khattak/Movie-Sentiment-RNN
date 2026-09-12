@@ -21,11 +21,12 @@ from movie_rnn.logging.logger import logging
 from movie_rnn.entity.config_entity import (
     TrainingPipelineConfig,
     DataIngestionConfig,
-    DataValidationConfig
+    DataValidationConfig,
+    DataTransformationConfig
 )
 from movie_rnn.components.data_ingestion import DataIngestion
 from movie_rnn.components.data_validation import DataValidation
-
+from movie_rnn.components.data_transformation import DataTransformation
 
 try:
     logging.info("═" * 60)
@@ -64,5 +65,15 @@ try:
     logging.info(f"Validation status: {validation_artifact.validation_status}")
     logging.info(f"Validation message: {validation_artifact.message}")
 
+
+    transformation_config = DataTransformationConfig(pipeline_config)
+    data_transformation = DataTransformation(
+        transformation_config,
+        data_ingestion_artifact,
+        validation_artifact
+    )
+    transformation_artifact = data_transformation.initiate_data_transformation()
+    logging.info(f"X_train_padded: {transformation_artifact.x_train_padded_path}")
+    logging.info(f"X_test_padded:  {transformation_artifact.x_test_padded_path}")
 except Exception as e:
     raise MovieSentimentException(e, sys)
