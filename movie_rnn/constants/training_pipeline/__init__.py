@@ -166,3 +166,19 @@ MODEL_TRAINER_EARLY_STOPPING_PATIENCE: int = 5
 MODEL_TRAINER_EXPECTED_ACCURACY: float = 0.80
 # IMP: agar test accuracy < 0.80 → model reject karo
 #      Car Price mein expected R² = 0.80 tha — same concept
+
+
+
+# ─────────────────────────────────────────────────────────────────
+# HUGGINGFACE CONSTANTS
+# ─────────────────────────────────────────────────────────────────
+
+HF_MODEL_DIR:  str = "final_model"
+# local folder — model.keras + word_index.pkl yahan save honge
+# phir yahi folder HF pe push hoga
+# Car Price mein bhi same tha: "final_model/"
+
+HF_REPO_ID:   str = "alyan-ktk/movie-sentiment-rnn"
+# IMP: case sensitive — alyan-ktk (lowercase) — Car Price mein bhi yahi tha
+
+HF_REPO_TYPE: str = "model"
