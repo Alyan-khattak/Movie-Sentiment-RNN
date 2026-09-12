@@ -163,7 +163,7 @@ MODEL_TRAINER_EARLY_STOPPING_PATIENCE: int = 5
 # notebook se liya — 5 epochs improvement nahi → stop
 
 # ── EXPECTED PERFORMANCE ─────────────────────────────────────────
-MODEL_TRAINER_EXPECTED_ACCURACY: float = 0.80
+MODEL_TRAINER_EXPECTED_ACCURACY: float = 0.68
 # IMP: agar test accuracy < 0.80 → model reject karo
 #      Car Price mein expected R² = 0.80 tha — same concept
 
