@@ -105,3 +105,22 @@ DATA_VALIDATION_EXPECTED_TEST_SAMPLES:  int = 25000
 DATA_VALIDATION_EXPECTED_MAX_INDEX:     int = 10000
 # IMP: har sequence mein koi bhi index 10000 se zyada nahi hona chahiye
 #      kyunki max_features = 10000 set kiya tha load_data mein
+
+
+
+# ─────────────────────────────────────────────────────────────────
+# DATA TRANSFORMATION CONSTANTS
+# prefix: DATA_TRANSFORMATION_
+# ─────────────────────────────────────────────────────────────────
+
+DATA_TRANSFORMATION_DIR_NAME: str = "data_transformation"
+# path: Artifacts/timestamp/data_transformation/
+
+DATA_TRANSFORMATION_TRANSFORMED_DIR: str = "transformed"
+# padded arrays yahan save honge
+
+IMDB_MAX_LEN: int = 500
+# har sequence ko 500 tokens pe pad/truncate karo
+# notebook se liya: max_len = 500
+# chhota review → zeros se pad
+# lamba review  → 500 pe truncate
