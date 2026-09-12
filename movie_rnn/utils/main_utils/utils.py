@@ -130,6 +130,17 @@ def load_numpy_array(file_path: str) -> np.ndarray:
     except Exception as e:
         raise MovieSentimentException(e, sys)
 
+
+
+def load_object(file_path: str) -> object:
+    """disk se dill object load karta hai"""
+    try:
+        with open(file_path, "rb") as f:
+            obj = dill.load(f)
+        logging.info(f"Object loaded from: {file_path}")
+        return obj
+    except Exception as e:
+        raise MovieSentimentException(e, sys)
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN — save_numpy_array
 #

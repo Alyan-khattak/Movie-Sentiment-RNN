@@ -21,8 +21,10 @@ from movie_rnn.logging.logger import logging
 from movie_rnn.entity.config_entity import (
     TrainingPipelineConfig,
     DataIngestionConfig,
+    DataValidationConfig
 )
 from movie_rnn.components.data_ingestion import DataIngestion
+from movie_rnn.components.data_validation import DataValidation
 
 
 try:
@@ -40,17 +42,27 @@ try:
 
     # ── STEP 3: run ingestion ─────────────────────────────────────
     data_ingestion = DataIngestion(ingestion_config)
-    artifact = data_ingestion.initiate_data_ingestion()
+    data_ingestion_artifact = data_ingestion.initiate_data_ingestion()
 
     # ── STEP 4: print artifact paths ─────────────────────────────
     logging.info("DataIngestionArtifact:")
-    logging.info(f"  x_train_path    → {artifact.x_train_path}")
-    logging.info(f"  x_test_path     → {artifact.x_test_path}")
-    logging.info(f"  y_train_path    → {artifact.y_train_path}")
-    logging.info(f"  y_test_path     → {artifact.y_test_path}")
-    logging.info(f"  word_index_path → {artifact.word_index_path}")
+    logging.info(f"  x_train_path    → {data_ingestion_artifact.x_train_path}")
+    logging.info(f"  x_test_path     → {data_ingestion_artifact.x_test_path}")
+    logging.info(f"  y_train_path    → {data_ingestion_artifact.y_train_path}")
+    logging.info(f"  y_test_path     → {data_ingestion_artifact.y_test_path}")
+    logging.info(f"  word_index_path → {data_ingestion_artifact.word_index_path}")
 
     logging.info(">>> DataIngestion: PASSED <<<")
+
+
+
+    validation_config  = DataValidationConfig(pipeline_config)  # add
+
+    # validation
+    data_validation = DataValidation(validation_config, data_ingestion_artifact)
+    validation_artifact = data_validation.initiate_data_validation()
+    logging.info(f"Validation status: {validation_artifact.validation_status}")
+    logging.info(f"Validation message: {validation_artifact.message}")
 
 except Exception as e:
     raise MovieSentimentException(e, sys)
