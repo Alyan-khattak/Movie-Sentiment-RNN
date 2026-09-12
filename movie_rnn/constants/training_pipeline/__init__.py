@@ -124,3 +124,45 @@ IMDB_MAX_LEN: int = 500
 # notebook se liya: max_len = 500
 # chhota review → zeros se pad
 # lamba review  → 500 pe truncate
+
+
+
+
+
+# ─────────────────────────────────────────────────────────────────
+# MODEL TRAINER CONSTANTS
+# prefix: MODEL_TRAINER_
+# ─────────────────────────────────────────────────────────────────
+
+MODEL_TRAINER_DIR_NAME: str = "model_trainer"
+# path: Artifacts/timestamp/model_trainer/
+
+MODEL_TRAINER_TRAINED_MODEL_DIR: str = "trained_model"
+MODEL_TRAINER_MODEL_FILE_NAME: str = "model.keras"
+# path: Artifacts/timestamp/model_trainer/trained_model/model.keras
+
+# ── ANN ARCHITECTURE ─────────────────────────────────────────────
+MODEL_TRAINER_EMBEDDING_DIM: int = 128
+# Embedding layer output size — notebook se liya
+# 10000 words → each word = 128 dimensional vector
+
+MODEL_TRAINER_RNN_UNITS: int = 128
+# SimpleRNN units — notebook se liya
+
+MODEL_TRAINER_EPOCHS: int = 10
+# notebook se liya
+
+MODEL_TRAINER_BATCH_SIZE: int = 32
+#  32 standard hai, faster training
+
+MODEL_TRAINER_VALIDATION_SPLIT: float = 0.2
+# 20% train data → validation ke liye
+
+# ── EARLY STOPPING ───────────────────────────────────────────────
+MODEL_TRAINER_EARLY_STOPPING_PATIENCE: int = 5
+# notebook se liya — 5 epochs improvement nahi → stop
+
+# ── EXPECTED PERFORMANCE ─────────────────────────────────────────
+MODEL_TRAINER_EXPECTED_ACCURACY: float = 0.80
+# IMP: agar test accuracy < 0.80 → model reject karo
+#      Car Price mein expected R² = 0.80 tha — same concept
