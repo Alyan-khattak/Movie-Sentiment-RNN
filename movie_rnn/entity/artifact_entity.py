@@ -69,6 +69,23 @@ class DataValidationArtifact:
     # pass hone pe → "All validation checks passed"
     # fail hone pe → exactly kya fail hua
 
+
+# ══════════════════════════════════════════════════════════════════
+# DataTransformationArtifact
+# ═════════
+
+@dataclass
+class DataTransformationArtifact:
+    x_train_padded_path: str
+    # → "Artifacts/.../transformed/X_train_padded.npy"
+    # shape: (25000, 500) — ab fixed length
+
+    x_test_padded_path: str
+    # → "Artifacts/.../transformed/X_test_padded.npy"
+    # shape: (25000, 500)
+
+
+    
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN
 #
