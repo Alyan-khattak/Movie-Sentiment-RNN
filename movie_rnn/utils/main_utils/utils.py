@@ -105,6 +105,31 @@ def save_object(file_path: str, obj: object) -> None:
         raise MovieSentimentException(e, sys)
 
 
+
+
+def save_yaml(file_path: str, data: dict) -> None:
+    """validation report save karta hai"""
+    try:
+        import yaml
+        dir_path = os.path.dirname(file_path)
+        os.makedirs(dir_path, exist_ok=True)
+        with open(file_path, "w") as f:
+            yaml.dump(data, f, default_flow_style=False)
+        logging.info(f"YAML saved at: {file_path}")
+    except Exception as e:
+        raise MovieSentimentException(e, sys)
+
+
+
+def load_numpy_array(file_path: str) -> np.ndarray:
+    """disk se numpy array load karta hai"""
+    try:
+        array = np.load(file_path, allow_pickle=True)
+        logging.info(f"Numpy array loaded from: {file_path} | shape: {array.shape}")
+        return array
+    except Exception as e:
+        raise MovieSentimentException(e, sys)
+
 # ─────────────────────────────────────────────────────────────────
 # DRY RUN — save_numpy_array
 #
