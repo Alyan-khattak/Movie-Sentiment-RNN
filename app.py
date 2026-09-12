@@ -133,8 +133,8 @@ templates = Jinja2Templates(directory="templates")
 async def index(request: Request):
     """Landing page"""
     return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
+        request=request,
+        name ="index.html"    
     )
 
 
@@ -143,8 +143,9 @@ async def index(request: Request):
 async def predict_form(request: Request):
     """Prediction form — user review input karta hai"""
     return templates.TemplateResponse(
-        "predict.html",
-        {"request": request}
+        request = request,
+        name ="predict.html"
+        
     )
 
 
@@ -182,8 +183,10 @@ async def predict(
         # confidence = (1-0.23)*100 = 77.0%
 
         return templates.TemplateResponse(
-            "result.html",
-            {
+            request = request,
+            name = "result.html",
+
+            context = {
                 "request"   : request,
                 "review"    : review,
                 "label"     : label,
